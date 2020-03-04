@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.13.4
+
+os:
+  - linux
+  - windows
+  - osx
+
+dist: trusty
+install: true
+
+script:
+  - go build
