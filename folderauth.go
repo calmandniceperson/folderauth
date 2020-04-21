@@ -13,9 +13,10 @@ import (
 )
 
 type Client struct {
-	Hostname string
-	Username string
-	Token    string
+	Hostname   string
+	Username   string
+	Token      string
+	HTTPClient *http.Client
 }
 
 func hostnameHasCorrectPrefix(hostname string) bool {
@@ -24,11 +25,16 @@ func hostnameHasCorrectPrefix(hostname string) bool {
 
 // NewClient creates a new Client and returns it. If the hostname is invalid,
 // an error will be returned.
-func NewClient(hostname, username, token string) (*Client, error) {
+func NewClient(hostname, username, token string, httpClient *http.Client) (*Client, error) {
 	if !hostnameHasCorrectPrefix(hostname) {
 		return nil, fmt.Errorf("Invalid hostname %s", hostname)
 	}
-	return &Client{hostname, username, token}, nil
+
+	if httpClient == nil {
+		httpClient = &http.Client{}
+	}
+
+	return &Client{hostname, username, token, httpClient}, nil
 }
 
 func attachAuthHeader(req *http.Request, username, token string) {
@@ -54,8 +60,7 @@ func (c *Client) performRequest(method, route string, body io.Reader, contentTyp
 	}
 	attachAuthHeader(req, c.Username, c.Token)
 
-	hc := &http.Client{}
-	resp, err := hc.Do(req)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
